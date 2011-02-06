@@ -1,3 +1,6 @@
+//Copyright 2011 Casey Beach
+
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -5,11 +8,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
+#define TIME_LIMIT 60
+
 int NumberOfSeats;
+
+
+
+struct pairAndScore{
+
+	int pair[2];
+	int score;
+};
+
+bool pasCompare(const pairAndScore* lhs, const pairAndScore* rhs)
+{
+	return lhs->score > rhs->score;
+}
 
 int** readFile(string);
 int*  shuffle();
@@ -19,12 +38,12 @@ int scoreChangedPair(int* table, int** matrix, int* pair);
 int partialScore(int* table, int** matrix, int person);
 int pairScore(int, int, int**);
 char** parseLine(string);  //because strtok is a steaming pile!
+vector<pairAndScore*>* getAllSwaps();
+void swap(int*, int*);
 
 int main(int argc, char** argv)
 {
 
-	srand(time(NULL));
-	
 	string fileName("");
 	string fileNumber = "1";				
 	
@@ -37,15 +56,8 @@ int main(int argc, char** argv)
 	}
 
 	fileName = "hw1-inst"+fileNumber+".txt";
-
 	int** matrix = readFile(fileName);
-	
-//	searchLoop(matrix);
-
-	int table[10] = {0,1,2,3,4,5,6,7,8,9};
-	cout << "Test table score = " << scoreTable(table, matrix) << endl;
-
-
+	searchLoop(matrix);
 }
 
 int* shuffle()
@@ -64,11 +76,14 @@ int* shuffle()
 	{
 		for(int j = 0; j < NumberOfSeats; j++)
 		{
-			if(deck[i] > deck[currentHigh])
-				currentHigh = i;
+			if(deck[j] > deck[currentHigh])
+				currentHigh = j;
 		}
+
 		shuffledDeck[i] = currentHigh;
+		deck[currentHigh] = -1;
 	}
+
 	return shuffledDeck;
 }
 
@@ -79,10 +94,21 @@ int* searchLoop(int** matrix)
 	int elapsedTime = 0;
 	int tableScores[128];
 	int pair[2] = {-1, -1};
+	int firstScore = 0;
+	int secondScore = 0;
 
+	int choiceType = 0;
+	
 	time_t start, end;
 
 	time(&start);
+
+	vector<pairAndScore*> **switchedPairs= new vector<pairAndScore*>*[128];
+
+	for(int i = 0; i < 128; i++)
+	{
+		switchedPairs[i] = getAllSwaps();
+	}
 
 	for(int i = 0; i < 128; i++)
 	{
@@ -91,43 +117,112 @@ int* searchLoop(int** matrix)
 	}
 
 	cout << "Entering Search Loop. Count-down has begun..." << endl;
+	
+	getAllSwaps();
 
-	while(elapsedTime < 10)
+	while(elapsedTime < TIME_LIMIT)
 	{
-		
-
-
-
+		int choiceType = rand() % 10;
+		for(int i = 0; i < 128; i++)
+		{
+			for(int j = 0; j < NumberOfSeats * NumberOfSeats; j++)//get the scores for all of the tables
+			{
+				swap(switchedPairs[i]->at(j)->pair, tables[i]);
+				switchedPairs[i]->at(j)->score = scoreTable(tables[i],matrix);
+				swap(switchedPairs[i]->at(j)->pair, tables[i]);
+			}
+			if(choiceType > 5)	//choose one of the 5 best tables
+			{
+				sort(switchedPairs[i]->begin(),switchedPairs[i]->end(),pasCompare);
+				swap(switchedPairs[i]->at(rand() % 5)->pair, tables[i]);				
+				
+			} else if (choiceType <= 5 && choiceType > 2)	//randomly take any improvement
+			{
+				sort(switchedPairs[i]->begin(), switchedPairs[i]->end(), pasCompare);
+				for(int k = 0; k < NumberOfSeats * NumberOfSeats; k++)
+				{
+					if(k > 0 && switchedPairs[i]->at(k)->score <= 0)
+						swap(switchedPairs[i]->at(rand() % k)->pair, tables[i]);		
+				}
+			
+			} else if (choiceType <= 2)	//randomly take ANY pair swap.
+			{
+				swap(switchedPairs[i]->at(rand() % (NumberOfSeats * NumberOfSeats))->pair, tables[i]);
+			}
+		}
 
 		time(&end);
 		elapsedTime = difftime(end, start);
 	}
-	cout << "60 seconds have passed" << endl;
+
+	int bestTable = 0;
+
+	for(int i = 1; i < 128; i ++)
+	{
+		if(scoreTable(tables[i], matrix) > scoreTable(tables[bestTable], matrix))
+			bestTable = i;
+	}
+	
+	cout << TIME_LIMIT << " seconds have passed" << endl;
+	cout << "The best table has a score of " << scoreTable(tables[bestTable], matrix) << endl;
+
+
+	return 0;
+}
+
+void swap(int *pair, int* table)
+{
+	int tempI = 0;
+	tempI = table[pair[0]]; 
+	table[pair[0]] = table[pair[1]];
+	table[pair[1]] = tempI;
+}
+
+vector<pairAndScore*>* getAllSwaps()
+{
+	vector<pairAndScore*> *switchedPairs;
+	switchedPairs = new vector<pairAndScore*> (NumberOfSeats * NumberOfSeats);
+	
+	for(int i = 0; i < NumberOfSeats; i++)	//try every possible pair swap
+	{
+		for(int j = 0; j < NumberOfSeats; j++)
+		{
+			switchedPairs->at(NumberOfSeats * i + j) = new pairAndScore();
+			switchedPairs->at(NumberOfSeats * i + j)->pair[0] = i;
+			switchedPairs->at(NumberOfSeats * i + j)->pair[1] = j;
+		}
+	}
+	return switchedPairs;
 }
 
 int scoreTable(int* table, int** matrix)
 {
 	int score = 0;
 	int halfOfSeats = NumberOfSeats / 2;
+
 	for(int i = 0; i < halfOfSeats; i++)
 	{
-		if(i <= halfOfSeats - 1)
+		if(i < halfOfSeats - 1)
 		{
 			score += pairScore(table[i], table[i + 1], matrix); //person i and 1 to the left
 			score += pairScore(table[i + 1], table[i], matrix);//vice versa
+			
+			if(i + halfOfSeats + 1 < NumberOfSeats)
+			{
+				score += pairScore(table[i + halfOfSeats], table[i + halfOfSeats + 1], matrix);//now on the other side
+				score += pairScore(table[i + halfOfSeats + 1], table[i + halfOfSeats], matrix);
+			}
 
-			score += pairScore(table[i + halfOfSeats], table[i + halfOfSeats + 1], matrix);//now on the other side
-			score += pairScore(table[i + halfOfSeats + 1], table[i + halfOfSeats], matrix);
-
-			if(table[i] < halfOfSeats && table[i + 1] > halfOfSeats ||
-			   table[i] > halfOfSeats && table[i + 1] < halfOfSeats)
+			if((table[i] < halfOfSeats && table[i + 1] >= halfOfSeats) ||
+			   (table[i] >= halfOfSeats && table[i + 1] < halfOfSeats))
 				score += 1;
 
 		}
-		if(table[i] < halfOfSeats && table[i + halfOfSeats] > halfOfSeats ||
-		   table[i] > halfOfSeats && table[i + halfOfSeats] < halfOfSeats)
+		if((table[i] < halfOfSeats && table[i + halfOfSeats] >= halfOfSeats) ||
+		   (table[i] >= halfOfSeats && table[i + halfOfSeats] < halfOfSeats))
+		{
 			score += 2;
-
+		}
 		score += pairScore(table[i + halfOfSeats], table[i], matrix);
 		score += pairScore(table[i], table[i + halfOfSeats], matrix);
 
@@ -140,9 +235,9 @@ int scoreChangedPair(int* table, int** matrix, int* pair)
 {
 
 
-
+	return 0;
 }
-
+/*
 
 int partialScore(int* table, int** matrix, int person)
 {
@@ -207,16 +302,14 @@ int partialScore(int* table, int** matrix, int person)
 
 	return personScore;	
 }
-
+*/
 int pairScore(int person1, int person2, int ** matrix)
 {
-	cout << person1 << " : " << person2 << " | " << matrix[person1][person2] << endl;
 	return matrix[person1][person2];
 }
 
 char ** parseLine(string line)
 {
-	int tokens = 0;
 	int strIndex = 0;
 	int strNumber = 0;
 	int numberIndex = 0;
@@ -242,11 +335,14 @@ char ** parseLine(string line)
 		}
 
 		if(tempCStr[numberIndex] == '\0')
-			return numbers;
+			break;
 		numberIndex++;
 		numbers[strNumber][strIndex + 1] = '\0';
 		strNumber++;
 	}
+
+	return numbers;
+
 }
 
 
@@ -286,13 +382,22 @@ int** readFile(string fileName)
 				matrix = new int*[seats];
 				for(int i = 0; i < seats; i++)
 				{
-					matrix[i] = new int[val];
+					matrix[i] = new int[NumberOfSeats];
 				}
+				for( int i = 0 ; i < NumberOfSeats; i++)
+				{
+					for ( int j = 0; j < NumberOfSeats; j++)
+					{
+						matrix[i][j] = 0;
+					}
+				}
+
+
 			}
 
 			getline(instanceFile, line);
-			cout << "line = " << line << endl;
-			lineOfParsedStrings = parseLine(line);	
+			lineOfParsedStrings = parseLine(line);
+
 			tempCharArray = new char[line.length() + 1];
 			if(tempCharArray)
 			{
@@ -300,15 +405,17 @@ int** readFile(string fileName)
 			}
 
 			else
+			{
 				exit(1);
-			
-			for(int i = 0; i < seats; i++)
+			}
+			for(int i = 0; i < NumberOfSeats; i++)
 			{
 				sscanf(lineOfParsedStrings[i], "%d", &val);
 				matrix[row][i] = val;
 			}
 
 			row++;
+
 			if(seats == row)
 				break;
 
@@ -316,13 +423,14 @@ int** readFile(string fileName)
 		
 		cout << "Closing file" << endl;
 		
+	} else
+	{
+		cout << "Could not open file" << endl; 
 	}
-	
-	else cout << "Could not open file" << endl;
-
 
 	if(instanceFile.is_open())
 		instanceFile.close();
+
 
 	return matrix;
 	

@@ -1,9 +1,10 @@
+TARGET := ad
 
 OBJECTS :=\
-	search.o
+	adSearch.o
 
 SOURCE :=\
-	search.cpp
+	adSearch.cpp
 
 CC := g++
 HEADERFILES := 
@@ -14,7 +15,7 @@ CPFLAGS := -c -g -Wall -fpermissive
 INCLUDES := 
 
 all: $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) search $(INCLUDES)
+	$(CC) $(OBJECTS) $(LDFLAGS) $(TARGET) $(INCLUDES)
 
 $(OBJECTS): $(SOURCE)
 	$(CC) $(HEADERFILES) $(SOURCE) $(CPFLAGS)
