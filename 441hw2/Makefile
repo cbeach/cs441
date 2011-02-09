@@ -1,10 +1,12 @@
 TARGET := ad
 
 OBJECTS :=\
-	adSearch.o
+	adSearch.o\
+	halfPly.o
 
 SOURCE :=\
-	adSearch.cpp
+	adSearch.cpp\
+	halfPly.cpp
 
 CC := g++
 HEADERFILES := 
@@ -21,7 +23,6 @@ $(OBJECTS): $(SOURCE)
 	$(CC) $(HEADERFILES) $(SOURCE) $(CPFLAGS)
 
 clean:
-	rm -f *.o\
-	all
+	rm -f *.o
 	
 
