@@ -8,6 +8,7 @@ class halfPly
 	public:
 	halfPly();
 	halfPly(int);
+	halfPly(halfPly &);
 	~halfPly();
 
 	enum{PlayerO = -1, Empty = 0, PlayerX = 1};
@@ -23,16 +24,16 @@ class halfPly
 
 	bool legalMove(int column);
 	
-	void move(int column);
+	void move(int column, int player);
 
-	halfPly* copy();
 
+	int best;
 	int boardHeight;
 	int columnHeight[3];
 	int lastPlayer;
 	int lastMove[2];	//(column, row)
 	int **board;
-	
+
 	halfPly *parrent;
 	halfPly **children;
 

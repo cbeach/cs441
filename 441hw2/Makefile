@@ -11,7 +11,7 @@ SOURCE :=\
 CC := g++
 HEADERFILES := 
 LDFLAGS := -o
-CPFLAGS := -c -g -Wall -fpermissive
+CPFLAGS := -c -Wall -fpermissive -g
 
 
 INCLUDES := 
