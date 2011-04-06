@@ -1,0 +1,18 @@
+Casey Beach
+Beachc at (NO SPAM!) gmail.com
+
+My public repository is located at
+http://github.com/cbeach
+
+This program uses a depth first search algorithm to prove that connect three on a 4X3 board is a draw.
+I use an implementation of the minimax algorithm to get this result.
+
+Run it with...
+
+make && ./ad
+
+And it will tell you that a game on a 4X3 board is a draw.
+
+This program was developed and run on the computers in the linux lab in fab8810.
+
+Enjoy.

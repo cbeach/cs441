@@ -1,3 +1,6 @@
+//Copy Right 2011 Casey Beach
+//beachc at (NoSpam) gmail.com
+
 #ifndef HALFPLY_H
 #define HALFPLY_H
 
@@ -16,26 +19,28 @@ class halfPly
 	int xMove();	//maximizing
 	int oMove();	//minimizing
 	
-	int evalBoard();
-	bool hStrip(int x, int y);
-	bool vStrip(int x, int y);
-	bool dDStrip(int x, int y);
-	bool dUStrip(int x, int y);
-
-	bool legalMove(int column);
+	int evalBoard();		//see if a board is a win
 	
-	void move(int column, int player);
+	//check all the possible "strips"  only checks around the last move
+	bool hStrip(int x, int y);	//horizontal
+	bool vStrip(int x, int y);	//verticle
+	bool dDStrip(int x, int y);	//diagonal down from left to right
+	bool dUStrip(int x, int y);	//diagonal up from left to right
+
+	bool legalMove(int column);	//is a move legal
+		
+	void move(int column, int player);	//put a peice in the board and fiddle with the required variables
 
 
-	int best;
-	int boardHeight;
+	int best;		//best board so far
+	int boardHeight;	
 	int columnHeight[3];
 	int lastPlayer;
 	int lastMove[2];	//(column, row)
-	int **board;
+	int **board;		//data for the board
 
-	halfPly *parrent;
-	halfPly **children;
+	halfPly *parrent;	
+	halfPly **children;	//board's children for the breadth first search.
 
 };
 

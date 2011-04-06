@@ -1,3 +1,6 @@
+//Copy Right 2011 Casey Beach
+//beachc at (NoSpam) gmail.com
+
 #include <iostream>
 #include <assert.h>
 #include "halfPly.h"
@@ -29,6 +32,7 @@ halfPly::halfPly(int n)
 
 }
 
+//copy constructor
 halfPly::halfPly(halfPly &old) 
 {
 	boardHeight = old.boardHeight;
@@ -66,6 +70,7 @@ halfPly::halfPly(halfPly &old)
 
 halfPly::~halfPly()
 {
+/*
 	for(int i = 0; i < 3; i++)
 	{	
 		if(board[i])
@@ -73,8 +78,11 @@ halfPly::~halfPly()
 	}
 	if(board)
 		delete[] board ;
-	
+*/	
 }
+
+//I split the moves into two sides.  This is more verbose, but I had an easier time
+//understanding what was going on, which is the point.
 
 int halfPly::xMove()
 {
@@ -96,8 +104,8 @@ int halfPly::xMove()
 			children[i]->parrent = this;
 			children[i]->best = 0;
 			value = children[i]->oMove();	
-			if(children[i])
-				delete children[i];
+			//if(children[i])
+			//	delete children[i];
 			if(value > best)
 				best = value;
 		}
@@ -136,6 +144,9 @@ int halfPly::oMove()
 //returns 1 on X win
 //returns 0 on draw
 //returns -1 on Y win
+//I followed barts advice and integrated strips into
+//my evaluation algorithm.  That made is much cleaner
+//looking.
 int halfPly::evalBoard()
 {
 	//variables to make things look prettier
@@ -153,6 +164,7 @@ int halfPly::evalBoard()
 	return false;
 }
 
+//Horizontal win
 bool halfPly::hStrip(int x, int y)
 {
 	if(x == 0)
@@ -167,6 +179,8 @@ bool halfPly::hStrip(int x, int y)
 	else
 		return false;
 }
+
+//verticle win
 bool halfPly::vStrip(int x, int y)
 {
 	bool win = false;
@@ -182,9 +196,9 @@ bool halfPly::vStrip(int x, int y)
 	}
 	
 	return win;
-
-
 }
+
+//diagonal down from left to right
 bool halfPly::dDStrip(int x, int y)
 {
 	if(y == 0 && x == 0)
@@ -208,6 +222,8 @@ bool halfPly::dDStrip(int x, int y)
 		return false;
 
 }
+
+//diagonal up from left to right
 bool halfPly::dUStrip(int x, int y)
 {
 	if(x == 0)
@@ -229,7 +245,9 @@ bool halfPly::dUStrip(int x, int y)
 }
 
 
-
+//determines if a move is legal.
+//moves are only illegal if the 
+//are moving into a full column
 bool halfPly::legalMove(int column)
 {
 	if(columnHeight[column] < boardHeight)
@@ -238,6 +256,8 @@ bool halfPly::legalMove(int column)
 		return false;
 }
 
+//puts a piece into the board, and fiddles
+//with all the required bits.
 void halfPly::move(int column, int player) 
 {
 	if(legalMove(column))

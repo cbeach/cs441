@@ -1,3 +1,6 @@
+//Copy Right 2011 Casey Beachi
+//beachc at (NoSpam) gmail.com
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
